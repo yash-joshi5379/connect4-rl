@@ -1,2 +1,2 @@
 # connect4-rl
-hi josh
+Hi josh
