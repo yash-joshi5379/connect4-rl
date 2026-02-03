@@ -1,2 +1,2 @@
-# Connect4-rl
+# Gomoku-rl
 Hi josh
