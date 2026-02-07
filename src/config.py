@@ -5,8 +5,8 @@ class Config:
     WIN_LENGTH: int = 5
 
     # Training
-    TOTAL_EPISODES: int = 30_000
-    SAVE_FREQ: int = 1000
+    TOTAL_EPISODES: int = 5000
+    SAVE_FREQ: int = 500
 
     # DQN hyperparameters
     GAMMA: float = 0.99

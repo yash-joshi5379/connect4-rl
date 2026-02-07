@@ -96,7 +96,8 @@ class Player:
             )
             target_q = rewards + (1 - dones) * self.gamma * next_q_target
 
-        loss = F.mse_loss(current_q, target_q)
+        loss = F.smooth_l1_loss(current_q, target_q)
+        # loss = F.mse_loss(current_q, target_q)
 
         self.optimizer.zero_grad()
         loss.backward()
