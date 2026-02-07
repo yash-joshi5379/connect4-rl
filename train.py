@@ -8,6 +8,7 @@ from src.config import Config
 import random
 import numpy as np
 from tqdm import trange
+from collections import deque
 
 
 class RandomAgent:
@@ -113,9 +114,9 @@ def get_reward(game_result, is_agent_black, game, action, agent_color):
         return 1.0 if agent_won else -1.0
 
     # Intermediate shaped rewards
-    threat_reward = calculate_shaped_reward(game, action, agent_color)
+    shaped_reward = calculate_shaped_reward(game, action, agent_color)
 
-    return threat_reward
+    return shaped_reward
 
 
 def play_episode(player, opponent):
@@ -165,6 +166,10 @@ def train():
     loss_count = 0
     draw_count = 0
 
+    # Rolling win rate tracking
+    rolling_window = deque(maxlen=500)
+    best_win_rate = 0.0
+
     for episode in trange(Config.TOTAL_EPISODES):
         opponent = random_opponent
 
@@ -191,10 +196,23 @@ def train():
         )
         if result == GameResult.DRAW:
             draw_count += 1
+            rolling_window.append(0)
         elif agent_won:
             win_count += 1
+            rolling_window.append(1)
         else:
             loss_count += 1
+            rolling_window.append(0)
+
+        # Calculate rolling win rate
+        rolling_win_rate = (
+            sum(rolling_window) / len(rolling_window) if len(rolling_window) > 0 else 0.0
+        )
+
+        # Save best model based on rolling win rate
+        if len(rolling_window) == 500 and rolling_win_rate > best_win_rate:
+            best_win_rate = rolling_win_rate
+            player.save_model(f"{Config.MODEL_DIR}/player_best.pth")
 
         logger.log_game(
             result,
@@ -209,6 +227,7 @@ def train():
                     "loss": avg_loss,
                     "epsilon": player.epsilon,
                     "win_rate": win_count / (episode + 1),
+                    "rolling_win_rate": rolling_win_rate,
                     "buffer_size": len(player.buffer),
                 },
             )
@@ -219,6 +238,8 @@ def train():
             loss_str = f"{avg_loss:.4f}" if avg_loss is not None else "N/A"
             print(f"Episode {episode + 1}/{Config.TOTAL_EPISODES}")
             print(f"  Win Rate: {win_rate:.3f} ({win_count}W-{loss_count}L-{draw_count}D)")
+            print(f"  Rolling Win Rate (last 500): {rolling_win_rate:.3f}")
+            print(f"  Best Rolling Win Rate: {best_win_rate:.3f}")
             print(
                 f"  Epsilon: {player.epsilon:.3f}, Loss: {loss_str}, Buffer: {len(player.buffer)}"
             )
@@ -227,8 +248,9 @@ def train():
 
     player.save_model(f"{Config.MODEL_DIR}/player_final.pth")
     logger.save()
-    print("\nTraining complete!")
+    print("\nTraining complete")
     print(f"Final Win Rate: {win_count / Config.TOTAL_EPISODES:.3f}")
+    print(f"Best Rolling Win Rate: {best_win_rate:.3f}")
 
 
 if __name__ == "__main__":

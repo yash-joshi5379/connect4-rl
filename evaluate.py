@@ -48,7 +48,7 @@ def evaluate(player, opponent, num_games=100):
 
 if __name__ == "__main__":
     player = Player()
-    player.load_model(f"{Config.MODEL_DIR}/player_final.pth")
+    player.load_model(f"{Config.MODEL_DIR}/player_best.pth")
 
     print("Evaluating against random opponent...")
     random_opponent = RandomAgent()
