@@ -13,6 +13,8 @@ class RandomAgent:
 
 
 def evaluate(player, opponent, num_games):
+    player.epsilon = 0.0
+
     wins = 0
     losses = 0
     draws = 0
@@ -50,4 +52,4 @@ if __name__ == "__main__":
 
     print("Evaluating against random opponent...")
     random_opponent = RandomAgent()
-    evaluate(player, random_opponent, 10000)
+    evaluate(player, random_opponent, 1000)
