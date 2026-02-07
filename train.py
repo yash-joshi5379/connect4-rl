@@ -17,90 +17,74 @@ class RandomAgent:
         return random.choice(legal_actions)
 
 
-def calculate_shaped_reward(game, action, agent_color):
+def count_line(game, row, col, dr, dc, color):
+    """Count consecutive stones of given color in one direction from (row, col)"""
+    count = 0
+    r, c = row + dr, col + dc
+    while (
+        0 <= r < Config.BOARD_SIZE
+        and 0 <= c < Config.BOARD_SIZE
+        and game.board[r, c] == color
+    ):
+        count += 1
+        r += dr
+        c += dc
+    return count
+
+
+def get_pattern_length(game, row, col, color):
+    """Get maximum line length for a stone of given color at (row, col)"""
+    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+    max_length = 0
+
+    for dr, dc in directions:
+        # Count in both directions and add 1 for the stone itself
+        length = 1 + count_line(game, row, col, dr, dc, color) + count_line(game, row, col, -dr, -dc, color)
+        max_length = max(max_length, length)
+
+    return max_length
+
+
+def check_blocks_opponent(game, row, col, opponent_color):
+    """Check if placing a stone at (row, col) blocks an opponent threat"""
+    # Temporarily check what opponent would have had at this position
+    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+    max_blocked_length = 0
+
+    for dr, dc in directions:
+        # Check what the opponent line would be through this empty position
+        length = 1 + count_line(game, row, col, dr, dc, opponent_color) + count_line(game, row, col, -dr, -dc, opponent_color)
+        max_blocked_length = max(max_blocked_length, length)
+
+    return max_blocked_length
+
+
+def calculate_shaped_reward(game, action, agent_color, opponent_color):
     """Calculate intermediate rewards for threats and blocks"""
     row, col = action
 
-    # Check if this move creates a threat (3 or 4 in a row)
+    # Threat reward: what pattern did we create?
+    threat_length = get_pattern_length(game, row, col, agent_color)
     threat_reward = 0.0
+    if threat_length == 4:
+        threat_reward = 0.05
+    elif threat_length == 3:
+        threat_reward = 0.03
+    elif threat_length == 2:
+        threat_reward = 0.01
+
+    # Block reward: what opponent pattern did we block?
+    blocked_length = check_blocks_opponent(game, row, col, opponent_color)
     block_reward = 0.0
+    if blocked_length >= 4:
+        block_reward = 0.10  # Blocking a winning threat
+    elif blocked_length == 3:
+        block_reward = 0.04  # Blocking a strong threat
 
-    # Temporarily check what this move creates
-    directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
-
-    for dr, dc in directions:
-        count = 1
-        # Count in positive direction
-        r, c = row + dr, col + dc
-        while (
-            0 <= r < Config.BOARD_SIZE
-            and 0 <= c < Config.BOARD_SIZE
-            and game.board[r, c] == agent_color
-        ):
-            count += 1
-            r += dr
-            c += dc
-
-        # Count in negative direction
-        r, c = row - dr, col - dc
-        while (
-            0 <= r < Config.BOARD_SIZE
-            and 0 <= c < Config.BOARD_SIZE
-            and game.board[r, c] == agent_color
-        ):
-            count += 1
-            r -= dr
-            c -= dc
-
-        # Reward for creating threats
-        if count == 4:
-            threat_reward = 0.05
-        elif count == 3:
-            threat_reward = max(threat_reward, 0.03)
-        elif count == 2:
-            threat_reward = max(threat_reward, 0.01)
-
-    return threat_reward
+    return threat_reward + block_reward
 
 
-def check_opponent_threat(game, agent_color):
-    """Check if opponent has a threatening position that should be blocked"""
-    opponent_color = (
-        GamePlayer.WHITE.value if agent_color == GamePlayer.BLACK.value else GamePlayer.BLACK.value
-    )
-
-    for row in range(Config.BOARD_SIZE):
-        for col in range(Config.BOARD_SIZE):
-            if game.board[row, col] == opponent_color:
-                directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
-                for dr, dc in directions:
-                    count = 1
-                    r, c = row + dr, col + dc
-                    while (
-                        0 <= r < Config.BOARD_SIZE
-                        and 0 <= c < Config.BOARD_SIZE
-                        and game.board[r, c] == opponent_color
-                    ):
-                        count += 1
-                        r += dr
-                        c += dc
-
-                    r, c = row - dr, col - dc
-                    while (
-                        0 <= r < Config.BOARD_SIZE
-                        and 0 <= c < Config.BOARD_SIZE
-                        and game.board[r, c] == opponent_color
-                    ):
-                        count += 1
-                        r -= dr
-                        c -= dc
-
-                    if count >= 3:
-                        return True
-    return False
-
-
-def get_reward(game_result, is_agent_black, game, action, agent_color):
+def get_reward(game_result, is_agent_black, game, action, agent_color, opponent_color):
     """Calculate total reward including terminal and shaped rewards"""
     # Terminal reward
     if game_result != GameResult.ONGOING:
@@ -114,7 +98,7 @@ def get_reward(game_result, is_agent_black, game, action, agent_color):
         return 1.0 if agent_won else -1.0
 
     # Intermediate shaped rewards
-    shaped_reward = calculate_shaped_reward(game, action, agent_color)
+    shaped_reward = calculate_shaped_reward(game, action, agent_color, opponent_color)
 
     return shaped_reward
 
@@ -126,6 +110,7 @@ def play_episode(player, opponent):
     # Randomize which color the agent plays
     agent_is_black = random.random() < 0.5
     agent_color = GamePlayer.BLACK if agent_is_black else GamePlayer.WHITE
+    opponent_color = GamePlayer.WHITE if agent_is_black else GamePlayer.BLACK
 
     episode_transitions = []
 
@@ -142,7 +127,7 @@ def play_episode(player, opponent):
             game.step(action)
 
             # Calculate reward including shaped rewards
-            reward = get_reward(game.result, agent_is_black, game, action, agent_color.value)
+            reward = get_reward(game.result, agent_is_black, game, action, agent_color.value, opponent_color.value)
 
             next_state = game.get_state_for_network() if game.result == GameResult.ONGOING else None
             done = game.result != GameResult.ONGOING
@@ -205,9 +190,7 @@ def train():
             rolling_window.append(0)
 
         # Calculate rolling win rate
-        rolling_win_rate = (
-            sum(rolling_window) / len(rolling_window) if len(rolling_window) > 0 else 0.0
-        )
+        rolling_win_rate = sum(rolling_window) / len(rolling_window) if len(rolling_window) > 0 else 0.0
 
         # Save best model based on rolling win rate
         if len(rolling_window) == 500 and rolling_win_rate > best_win_rate:
@@ -248,7 +231,7 @@ def train():
 
     player.save_model(f"{Config.MODEL_DIR}/player_final.pth")
     logger.save()
-    print("\nTraining complete")
+    print("\nTraining complete!")
     print(f"Final Win Rate: {win_count / Config.TOTAL_EPISODES:.3f}")
     print(f"Best Rolling Win Rate: {best_win_rate:.3f}")
 
