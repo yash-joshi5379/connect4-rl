@@ -4,7 +4,7 @@ from enum import Enum
 from src.config import Config
 
 
-class Player(Enum):
+class Color(Enum):
     EMPTY = 0
     BLACK = 1
     WHITE = 2
@@ -23,7 +23,7 @@ class GomokuGame:
 
     def reset(self):
         self.board = np.zeros((Config.BOARD_SIZE, Config.BOARD_SIZE), dtype=np.int8)
-        self.current_player = Player.BLACK
+        self.current_player = Color.BLACK
         self.move_history = []
         self.result = GameResult.ONGOING
         self.last_move = None
@@ -35,7 +35,7 @@ class GomokuGame:
     def get_legal_actions(self):
         if self.result != GameResult.ONGOING:
             return []
-        return list(zip(*np.where(self.board == Player.EMPTY.value)))
+        return list(zip(*np.where(self.board == Color.EMPTY.value)))
 
     def step(self, action):
         row, col = action
@@ -49,17 +49,13 @@ class GomokuGame:
 
         if self._check_win(row, col):
             self.result = (
-                GameResult.BLACK_WIN
-                if self.current_player == Player.BLACK
-                else GameResult.WHITE_WIN
+                GameResult.BLACK_WIN if self.current_player == Color.BLACK else GameResult.WHITE_WIN
             )
         elif len(self.get_legal_actions()) == 0:
             self.result = GameResult.DRAW
 
         if self.result == GameResult.ONGOING:
-            self.current_player = (
-                Player.WHITE if self.current_player == Player.BLACK else Player.BLACK
-            )
+            self.current_player = Color.WHITE if self.current_player == Color.BLACK else Color.BLACK
 
         return self.get_board(), self.result
 
@@ -67,7 +63,7 @@ class GomokuGame:
         return (
             0 <= row < Config.BOARD_SIZE
             and 0 <= col < Config.BOARD_SIZE
-            and self.board[row, col] == Player.EMPTY.value
+            and self.board[row, col] == Color.EMPTY.value
             and self.result == GameResult.ONGOING
         )
 
@@ -106,7 +102,7 @@ class GomokuGame:
 
     def get_state_for_network(self):
         current = self.current_player.value
-        opponent = Player.WHITE.value if current == Player.BLACK.value else Player.BLACK.value
+        opponent = Color.WHITE.value if current == Color.BLACK.value else Color.BLACK.value
 
         state = np.zeros((3, Config.BOARD_SIZE, Config.BOARD_SIZE), dtype=np.float32)
         state[0] = self.board == current

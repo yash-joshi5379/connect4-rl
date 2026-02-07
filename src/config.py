@@ -4,9 +4,10 @@ class Config:
     BOARD_SIZE: int = 9
     WIN_LENGTH: int = 5
 
-    # Training
+    # Number of training episodes
     TOTAL_EPISODES: int = 3000
 
+    # How often to check the progress, and save the best rolling model
     SAVE_FREQ: int = 1000
     ROLLING_WINDOW_SIZE: int = 500
 
@@ -20,7 +21,7 @@ class Config:
     BUFFER_CAPACITY: int = 100_000
     TARGET_UPDATE_FREQ: int = 1000
 
-    # Training
+    # Training the network for multiple steps per episode can help it learn better long-term strategies, but it also makes training slower
     TRAIN_STEPS_PER_EPISODE: int = 4
     GRAD_CLIP_NORM: float = 1.0
 

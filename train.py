@@ -1,8 +1,8 @@
 # train.py
 import torch
 import os
-from src.game import GomokuGame, GameResult, Player as GamePlayer
-from src.network import Player
+from src.game import GomokuGame, GameResult, Color
+from src.network import DQNAgent
 from src.logger import GameLogger
 from src.config import Config
 import random
@@ -88,20 +88,20 @@ def calculate_shaped_reward(game, action, agent_color, opponent_color):
     return threat_reward + block_reward
 
 
-def get_reward(game_result, is_agent_black, game, action, agent_color, opponent_color):
+def get_reward(game_result, agent_is_black, game, action, agent_color, opponent_color):
     """Calculate total reward including terminal and shaped rewards"""
     # Terminal reward
     if game_result != GameResult.ONGOING:
         if game_result == GameResult.DRAW:
             return Config.DRAW_REWARD
 
-        agent_won = (game_result == GameResult.BLACK_WIN and is_agent_black) or (
-            game_result == GameResult.WHITE_WIN and not is_agent_black
+        agent_won = (game_result == GameResult.BLACK_WIN and agent_is_black) or (
+            game_result == GameResult.WHITE_WIN and not agent_is_black
         )
 
         return Config.WIN_REWARD if agent_won else Config.LOSS_REWARD
 
-    # Intermediate shaped rewards
+    # Calculate shaped rewards (intermediate smaller rewards for creating threats or blocking opponent threats)
     shaped_reward = calculate_shaped_reward(game, action, agent_color, opponent_color)
 
     return shaped_reward
@@ -113,14 +113,14 @@ def play_episode(player, opponent):
 
     # Randomize which color the agent plays
     agent_is_black = random.random() < 0.5
-    agent_color = GamePlayer.BLACK if agent_is_black else GamePlayer.WHITE
-    opponent_color = GamePlayer.WHITE if agent_is_black else GamePlayer.BLACK
+    agent_color = Color.BLACK if agent_is_black else Color.WHITE
+    opponent_color = Color.WHITE if agent_is_black else Color.BLACK
 
     episode_transitions = []
 
     while game.result == GameResult.ONGOING:
-        is_agent_turn = (game.current_player == GamePlayer.BLACK and agent_is_black) or (
-            game.current_player == GamePlayer.WHITE and not agent_is_black
+        is_agent_turn = (game.current_player == Color.BLACK and agent_is_black) or (
+            game.current_player == Color.WHITE and not agent_is_black
         )
 
         if is_agent_turn:
@@ -149,7 +149,7 @@ def play_episode(player, opponent):
 def train():
     os.makedirs(Config.MODEL_DIR, exist_ok=True)
 
-    player = Player()
+    player = DQNAgent()
     random_opponent = RandomAgent()
     logger = GameLogger()
 

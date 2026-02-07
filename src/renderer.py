@@ -1,6 +1,6 @@
 # src/renderer.py
 import pygame
-from src.game import Player, GameResult
+from src.game import Color, GameResult
 from src.config import Config
 
 
@@ -46,12 +46,12 @@ class GomokuRenderer:
     def _draw_stones(self):
         for row in range(Config.BOARD_SIZE):
             for col in range(Config.BOARD_SIZE):
-                if self.game.board[row, col] != Player.EMPTY.value:
+                if self.game.board[row, col] != Color.EMPTY.value:
                     x = self.margin + col * self.cell_size
                     y = self.margin + row * self.cell_size
                     color = (
                         self.black_color
-                        if self.game.board[row, col] == Player.BLACK.value
+                        if self.game.board[row, col] == Color.BLACK.value
                         else self.white_color
                     )
                     pygame.draw.circle(self.screen, color, (x, y), self.cell_size // 2 - 2)
@@ -69,7 +69,7 @@ class GomokuRenderer:
         font = pygame.font.Font(None, 32)
 
         if self.game.result == GameResult.ONGOING:
-            player_text = "Black" if self.game.current_player == Player.BLACK else "White"
+            player_text = "Black" if self.game.current_player == Color.BLACK else "White"
             text = font.render(
                 f"Current: {player_text} | Moves: {len(self.game.move_history)}",
                 True,

@@ -29,7 +29,7 @@ class QNetwork(nn.Module):
         return x
 
 
-class Player:
+class DQNAgent:
     def __init__(self):
         self.gamma = Config.GAMMA
         self.epsilon = Config.EPSILON_START

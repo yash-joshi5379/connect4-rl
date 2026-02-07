@@ -1,6 +1,6 @@
 # evaluate.py
-from src.game import GomokuGame, GameResult, Player as GamePlayer
-from src.network import Player
+from src.game import GomokuGame, GameResult, Color
+from src.network import DQNAgent
 from src.config import Config
 import random
 from tqdm import trange
@@ -23,7 +23,7 @@ def evaluate(player, opponent, num_games):
         game = GomokuGame()
         game.reset()
 
-        player_color = GamePlayer.BLACK if i % 2 == 0 else GamePlayer.WHITE
+        player_color = Color.BLACK if i % 2 == 0 else Color.WHITE
 
         while game.result == GameResult.ONGOING:
             if game.current_player == player_color:
@@ -34,8 +34,8 @@ def evaluate(player, opponent, num_games):
 
         if game.result == GameResult.DRAW:
             draws += 1
-        elif (game.result == GameResult.BLACK_WIN and player_color == GamePlayer.BLACK) or (
-            game.result == GameResult.WHITE_WIN and player_color == GamePlayer.WHITE
+        elif (game.result == GameResult.BLACK_WIN and player_color == Color.BLACK) or (
+            game.result == GameResult.WHITE_WIN and player_color == Color.WHITE
         ):
             wins += 1
         else:
@@ -47,7 +47,7 @@ def evaluate(player, opponent, num_games):
 
 
 if __name__ == "__main__":
-    player = Player()
+    player = DQNAgent()
     player.load_model(f"{Config.MODEL_DIR}/player_best.pth")
 
     print("Evaluating against random opponent...")
