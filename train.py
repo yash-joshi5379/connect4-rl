@@ -5,6 +5,7 @@ from src.network import Player
 from src.logger import GameLogger
 from src.config import Config
 import random
+from tqdm import trange
 
 
 class RandomAgent:
@@ -57,7 +58,7 @@ def train():
     random_opponent = RandomAgent()
     logger = GameLogger()
 
-    for episode in range(Config.TOTAL_EPISODES):
+    for episode in trange(Config.TOTAL_EPISODES):
         opponent = random_opponent
 
         transitions, result, num_moves = play_episode(player, opponent)

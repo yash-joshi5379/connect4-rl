@@ -1,7 +1,7 @@
 import random
 import pygame
 from src.game import GomokuGame, GameResult
-from logger import GameLogger
+from src.logger import GameLogger
 from src.renderer import GomokuRenderer
 
 

@@ -6,7 +6,7 @@ class Config:
 
     # Training
     TOTAL_EPISODES: int = 1000
-    SAVE_FREQ: int = 50
+    SAVE_FREQ: int = 100
 
     # DQN hyperparameters
     GAMMA: float = 0.99

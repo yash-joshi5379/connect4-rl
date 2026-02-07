@@ -3,6 +3,7 @@ from src.game import GomokuGame, GameResult, Player as GamePlayer
 from src.network import Player
 from src.config import Config
 import random
+from tqdm import trange
 
 
 class RandomAgent:
@@ -18,7 +19,7 @@ def evaluate(player, opponent, num_games=100):
     losses = 0
     draws = 0
 
-    for i in range(num_games):
+    for i in trange(num_games):
         game = GomokuGame()
         game.reset()
 
