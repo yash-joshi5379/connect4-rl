@@ -140,22 +140,24 @@ def play_episode(player, opponent):
             # PRINT AFTER STEP
             #print(f"\n=== AFTER AGENT MOVE ===")
             #print(f"Current player: {game.current_player}")
-            
-            next_state = game.get_state_for_network(perspective_color=agent_color) if game.result == GameResult.ONGOING else None
-            
-            if next_state is not None:
-                pass
-                #print(f"Next state channel 0 sum: {next_state[0].sum()}")
-                #print(f"Next state channel 1 sum: {next_state[1].sum()}")
-                #print(f"Does next_state[0] match agent pieces? {(next_state[0].sum() == (game.board == agent_color.value).sum())}")
 
             # Calculate reward including shaped rewards
             reward = get_reward(
                 game.result, agent_is_black, game, action, agent_color.value, opponent_color.value
             )
 
-            next_state = game.get_state_for_network() if game.result == GameResult.ONGOING else None
+            next_state = (
+                game.get_state_for_network(perspective_color=agent_color)  # crucial to get next state from agent's perspective
+                if game.result == GameResult.ONGOING
+                else None
+            )
             done = game.result != GameResult.ONGOING
+
+            if next_state is not None:
+                pass
+                #print(f"Next state channel 0 sum: {next_state[0].sum()}")
+                #print(f"Next state channel 1 sum: {next_state[1].sum()}")
+                #print(f"Does next_state[0] match agent pieces? {(next_state[0].sum() == (game.board == agent_color.value).sum())}")
 
             episode_transitions.append((state, action_int, reward, next_state, done))
         else:

@@ -104,17 +104,17 @@ class GomokuGame:
         """Get state from perspective of current player or specified color"""
         if perspective_color is None:
             perspective_color = self.current_player
-        
+
         opponent = Color.WHITE if perspective_color == Color.BLACK else Color.BLACK
-        
+
         state = np.zeros((3, Config.BOARD_SIZE, Config.BOARD_SIZE), dtype=np.float32)
         state[0] = self.board == perspective_color.value
         state[1] = self.board == opponent.value
-        
+
         if self.last_move is not None:
             row, col = self.last_move
             state[2, row, col] = 1.0
-        
+
         return state
 
     def action_to_int(self, action):
