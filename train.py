@@ -53,9 +53,11 @@ def calculate_shaped_reward(game, action, agent_color):
 
         # Reward for creating threats
         if count == 4:
-            threat_reward = 0.5  # Four in a row (one away from winning)
+            threat_reward = 0.05
         elif count == 3:
-            threat_reward = max(threat_reward, 0.2)  # Three in a row
+            threat_reward = max(threat_reward, 0.03)
+        elif count == 2:
+            threat_reward = max(threat_reward, 0.01)
 
     return threat_reward
 
