@@ -176,6 +176,8 @@ def play_episode(player, opponent):
                 last_agent_reward = step_reward
         
         else:
+            action = opponent.select_action(game)
+            game.step(action)
             if game.result != GameResult.ONGOING:
 
                 outcome_reward = Config.LOSS_REWARD if game.result != GameResult.DRAW else Config.DRAW_REWARD
