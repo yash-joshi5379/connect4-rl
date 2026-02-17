@@ -5,7 +5,7 @@ class Config:
     WIN_LENGTH: int = 5
 
     # Number of training episodes
-    TOTAL_EPISODES: int = 3000
+    TOTAL_EPISODES: int = 6000
 
     # How often to check the progress, and save the best rolling model
     SAVE_FREQ: int = 1000
