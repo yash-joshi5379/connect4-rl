@@ -17,7 +17,7 @@ class GameResult(Enum):
     DRAW = 3
 
 
-class GomokuGame:
+class Game:
     def __init__(self):
         self.reset()
 
@@ -92,7 +92,7 @@ class GomokuGame:
         return count
 
     def clone(self):
-        game = GomokuGame()
+        game = Game()
         game.board = self.board.copy()
         game.current_player = self.current_player
         game.move_history = self.move_history.copy()

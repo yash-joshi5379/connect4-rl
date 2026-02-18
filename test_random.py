@@ -1,14 +1,14 @@
 import random
 import pygame
-from src.game import GomokuGame, GameResult
-from src.logger import GameLogger
+from src.game import Game, GameResult
+from src.logger import Logger
 from src.renderer import GomokuRenderer
 
 
 def play_random_game():
-    game = GomokuGame()
+    game = Game()
     renderer = GomokuRenderer(game)
-    logger = GameLogger("logs")
+    logger = Logger("logs")
 
     clock = pygame.time.Clock()
     running = True

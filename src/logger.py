@@ -5,7 +5,7 @@ from datetime import datetime
 from src.config import Config
 
 
-class GameLogger:
+class Logger:
     def __init__(self, log_dir=None):
         if log_dir is None:
             log_dir = Config.LOG_DIR

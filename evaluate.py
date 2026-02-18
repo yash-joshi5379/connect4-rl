@@ -1,5 +1,5 @@
 # evaluate.py
-from src.game import GomokuGame, GameResult, Color
+from src.game import Game, GameResult, Color
 from src.network import DQNAgent
 from src.config import Config
 import random
@@ -20,7 +20,7 @@ def evaluate(player, opponent, num_games):
     draws = 0
 
     for i in trange(num_games):
-        game = GomokuGame()
+        game = Game()
         game.reset()
 
         player_color = Color.BLACK if i % 2 == 0 else Color.WHITE
