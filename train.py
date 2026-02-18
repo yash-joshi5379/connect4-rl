@@ -16,7 +16,34 @@ class RandomAgent:
         legal_actions = game.get_legal_actions()
         return random.choice(legal_actions)
 
+class HeuristicAgent:
+    def __init__(self, color):
+        self.color = color
+        self.opponent_color = Color.WHITE.value if color == Color.BLACK.value else Color.BLACK.value
 
+    def select_action(self, game):
+        legal_actions = game.get_legal_actions()
+        if not legal_actions:
+            return None
+        
+        #immediate win
+        for r, c in legal_actions:
+            if get_pattern_length(game, r, c, self.color) >= 4:
+                return(r,c)
+        
+        #immediate block?
+        for r, c in legal_actions:
+            if get_pattern_length(game, r, c, self.opponent_color) >= 4:
+                return(r, c)
+        
+        #block 3 in a row
+        for r, c in legal_actions:
+            if get_pattern_length(game, r, c, self.opponent_color) == 3:
+                if random.random() < 0.8:
+                    return(r,c)   #i added random to make it slightly unpredictable
+        
+        return random.choice(legal_actions)
+    
 def count_line(game, row, col, dr, dc, color):
     """Count consecutive stones of given color in one direction from (row, col)"""
     count = 0
@@ -107,12 +134,15 @@ def get_reward(game_result, agent_is_black, game, action, agent_color, opponent_
     return shaped_reward
 
 
-def play_episode(player, opponent):
+def play_episode(player, opponent, agent_is_black):
     game = GomokuGame()
     game.reset()
 
     # Randomize which color the agent plays
-    agent_is_black = random.random() < 0.5
+    # agent_is_black = random.random() < 0.5
+
+
+
     agent_color = Color.BLACK if agent_is_black else Color.WHITE
     opponent_color = Color.WHITE if agent_is_black else Color.BLACK
 
@@ -227,9 +257,27 @@ def train():
     best_win_rate = 0.0
 
     for episode in trange(Config.TOTAL_EPISODES):
-        opponent = random_opponent
+        # opponent = random_opponent
 
-        transitions, result, num_moves, agent_is_black = play_episode(player, opponent)
+        progress = episode / Config.TOTAL_EPISODES
+
+        agent_is_black = random.random() < 0.5 
+        opponent_color = Color.WHITE.value if agent_is_black else Color.BLACK.value
+
+
+        if progress < 0.2:
+            opponent = random_opponent
+        elif progress < 0.6:
+            if random.random() < 0.5:
+                opponent = random_opponent
+            else:
+                opponent = HeuristicAgent(opponent_color)
+        else:
+            opponent = HeuristicAgent(opponent_color)
+
+        # transitions, result, num_moves, agent_is_black = play_episode(player, opponent)
+        transitions, result, num_moves, _ = play_episode(player, opponent, agent_is_black)
+
 
         # Store all transitions
         for state, action, reward, next_state, done in transitions:
