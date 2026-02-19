@@ -6,7 +6,7 @@ class Config:
     RANDOM_SEED: int = 42  # for reproducibility
 
     # Episodes and printing
-    TOTAL_EPISODES: int = 1000
+    TOTAL_EPISODES: int = 2000
     PRINT_FREQUENCY: int = 100
     OUTCOMES_MAXLEN: int = 100  # for tracking recent outcomes
     REWARDS_MAXLEN: int = 100  # for tracking recent rewards
@@ -22,9 +22,7 @@ class Config:
     LEARNING_RATE: float = 1e-4  # 2. controls update magnitude
     TARGET_UPDATE_FREQ: int = 2000  # 3. stability of target
     TRAIN_STEPS_PER_EPISODE: int = 4  # 4. controls learning density
-    BUFFER_CAPACITY: int = (
-        50_000  # 5. not sure, depends on curriculum which controls diversity of experience
-    )
+    BUFFER_CAPACITY: int = 50_000  # 5. not sure, depends on curriculum)
 
     # Sort of fixed hyperparameters
     GAMMA: float = 0.99
