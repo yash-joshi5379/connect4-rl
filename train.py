@@ -99,16 +99,16 @@ def train():
     os.makedirs(Config.MODEL_DIR, exist_ok=True)
 
     # Set seeds for reproducibility
-    torch.manual_seed(42)
-    torch.cuda.manual_seed(42)
-    random.seed(42)
-    np.random.seed(42)
+    torch.manual_seed(Config.RANDOM_SEED)
+    torch.cuda.manual_seed(Config.RANDOM_SEED)
+    random.seed(Config.RANDOM_SEED)
+    np.random.seed(Config.RANDOM_SEED)
 
     player = DQNAgent()
     random_opponent = RandomAgent()
     logger = Logger()
-    recent_outcomes = deque(maxlen=100)
-    recent_rewards = deque(maxlen=100)
+    recent_outcomes = deque(maxlen=Config.OUTCOMES_MAXLEN)
+    recent_rewards = deque(maxlen=Config.REWARDS_MAXLEN)
 
     for episode in trange(Config.TOTAL_EPISODES):
         opponent = random_opponent
