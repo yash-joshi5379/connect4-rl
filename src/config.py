@@ -8,26 +8,30 @@ class Config:
     TOTAL_EPISODES: int = 2000
     PRINT_FREQUENCY: int = 100
 
-    # Hyperparameters
+    # Tunable hyperparameters (most -> least impactful)
+    EPSILON_DECAY: float = 0.995  # 1. proven highest impact
+    LEARNING_RATE: float = 5e-5  # 2. controls update magnitude
+    TRAIN_STEPS_PER_EPISODE: int = 4  # 3. controls learning density
+    TARGET_UPDATE_FREQ: int = 1000  # 4. stability of target
+
+    # Sort of fixed hyperparameters
     GAMMA: float = 0.99
-    EPSILON_START: float = 1.0
     EPSILON_END: float = 0.1
-    EPSILON_DECAY: float = 0.999
-
-    # Training and replay buffer
-    LEARNING_RATE: float = 5e-5
+    EPSILON_START: float = 1.0
     BATCH_SIZE: int = 64
-    BUFFER_CAPACITY: int = 100_000
-    TARGET_UPDATE_FREQ: int = 1000
-    TRAIN_STEPS_PER_EPISODE: int = 4
-    GRAD_CLIP_NORM: float = 1.0
+    BUFFER_CAPACITY: int = 50_000
+    # GRAD_CLIP_NORM: float = 1.0
 
-    # Shaped rewards in order of how big they should be (very important for training)
-    THREAT_REWARD_2: float = 0.01  # 2 in a row is it starting a threat
-    THREAT_REWARD_3: float = 0.03  # 3 in a row is a stronger threat
-    BLOCK_REWARD_3: float = 0.04  # prefer blocking a 3 in a row to threatening a 3 in a row
-    THREAT_REWARD_4: float = 0.05  # prefer threatening a 4 in a row to blocking a 3 in a row
-    BLOCK_REWARD_4: float = 0.10  # block 4 in a row or you lose
+    # Threat rewards (own stones) - open = both ends free, half = one end blocked
+    OPEN_TWO: float = 0.01  # 2 in a row, both ends open
+    HALF_THREE: float = 0.015  # 3 in a row, one end open
+    OPEN_THREE: float = 0.03  # 3 in a row, both ends open
+    HALF_FOUR: float = 0.03  # 4 in a row, one end open
+    OPEN_FOUR: float = 0.05  # 4 in a row, both ends open
+
+    # Block rewards (opponent threats) - ordered by urgency
+    BLOCK_THREE: float = 0.04  # block opponent's open 3
+    BLOCK_FOUR: float = 0.10  # block opponent's 4 (open or half) - highest priority
 
     # Terminal rewards
     WIN_REWARD: float = 1.0

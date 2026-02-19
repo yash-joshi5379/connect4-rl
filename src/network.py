@@ -120,7 +120,7 @@ class DQNAgent:
 
         self.optimizer.zero_grad()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), Config.GRAD_CLIP_NORM)
+        # torch.nn.utils.clip_grad_norm_(self.q_network.parameters(), Config.GRAD_CLIP_NORM)
         self.optimizer.step()
 
         self.update_counter += 1
