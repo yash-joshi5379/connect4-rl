@@ -127,6 +127,7 @@ def train():
     logger = Logger()
     recent_outcomes = deque(maxlen=Config.OUTCOMES_MAXLEN)
     recent_rewards = deque(maxlen=Config.REWARDS_MAXLEN)
+    recent_moves = deque(maxlen=Config.OUTCOMES_MAXLEN)
 
     stage = Stage.RANDOM
     opponent_pool = []
@@ -148,7 +149,7 @@ def train():
         else:
             opponent = select_opponent(opponent_pool, opponent_cache)
 
-        transitions, result, _, agent_is_black = play_episode(player, opponent)
+        transitions, result, num_moves, agent_is_black = play_episode(player, opponent)
 
         # Store all transitions with 8-fold symmetry
         for state, action, reward, next_state, done in transitions:
@@ -192,21 +193,24 @@ def train():
                 "loss": round(avg_loss, 3),
                 "epsilon": round(player.epsilon, 3),
                 "buffer": len(player.buffer),
+                "moves": num_moves,
             }
         )
 
         recent_outcomes.append(outcome)
         recent_rewards.append(sum(t[2] for t in transitions))
+        recent_moves.append(num_moves)
 
         if (episode + 1) % Config.PRINT_FREQUENCY == 0:
             wr = recent_outcomes.count("W") / len(recent_outcomes)
             lr = recent_outcomes.count("L") / len(recent_outcomes)
             dr = recent_outcomes.count("D") / len(recent_outcomes)
-            reward = np.mean(recent_rewards) if recent_rewards else 0.0
+            avg_reward = np.mean(recent_rewards) if recent_rewards else 0.0
+            avg_moves = np.mean(recent_moves) if recent_moves else 0.0
 
             print(f"\nEpisode {episode + 1} [{stage.name}], W L D: {wr:.2f} - {lr:.2f} - {dr:.2f}")
             print(
-                f"Reward: {reward:.3f}, Epsilon: {player.epsilon:.3f}, Loss: {avg_loss:.3f}, Buffer: {len(player.buffer)}"
+                f"Reward: {avg_reward:.3f}, Epsilon: {player.epsilon:.3f}, Loss: {avg_loss:.3f}, Buffer: {len(player.buffer)}, Moves: {avg_moves:.1f}"
             )
             logger.save()
 

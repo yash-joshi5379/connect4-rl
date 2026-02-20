@@ -30,6 +30,6 @@ class Logger:
         self.writer.flush()
         if self.data:
             df = pd.DataFrame(self.data)
-            cols = ["episode", "outcome", "reward", "loss", "epsilon", "buffer"]
+            cols = ["episode", "outcome", "reward", "loss", "epsilon", "buffer", "moves"]
             existing = [c for c in cols if c in df.columns]
             df[existing].to_csv(self.log_dir / "training.csv", index=False)
