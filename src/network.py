@@ -49,7 +49,7 @@ class QNetwork(nn.Module):
 class DQNAgent:
     def __init__(self):
         self.gamma = Config.GAMMA
-        self.gamma_n = Config.GAMMA ** Config.N_STEP  # discounted over n steps
+        self.gamma_n = Config.GAMMA**Config.N_STEP  # discounted over n steps
         self.epsilon = Config.EPSILON_START
         self.epsilon_end = Config.EPSILON_END
         self.epsilon_decay = Config.EPSILON_DECAY
@@ -134,5 +134,7 @@ class DQNAgent:
         torch.save(self.q_network.state_dict(), filepath)
 
     def load_model(self, filepath):
-        self.q_network.load_state_dict(torch.load(filepath, map_location=self.device, weights_only=True))
+        self.q_network.load_state_dict(
+            torch.load(filepath, map_location=self.device, weights_only=True)
+        )
         self.target_network.load_state_dict(self.q_network.state_dict())

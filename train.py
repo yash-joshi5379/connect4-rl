@@ -48,9 +48,9 @@ def select_opponent(pool, opponent_cache):
 def flush_nstep_buffer(nstep_buffer, gamma, next_state, done):
     """
     Collapse the n-step buffer into a single transition.
-    
+
     nstep_buffer contains: [(s0, a0, r0), (s1, a1, r1), ..., (s_{n-1}, a_{n-1}, r_{n-1})]
-    
+
     Returns: (s0, a0, R_nstep, next_state, done)
     where R_nstep = r0 + γ*r1 + γ²*r2 + ... + γ^{n-1}*r_{n-1}
     """
@@ -201,7 +201,10 @@ def train():
         player.decay_epsilon()
 
         # Stage 2 checkpointing
-        if stage == Stage.SELFPLAY and (episode + 1 - Config.RANDOM_EPISODES) % Config.CHECKPOINT_INTERVAL == 0:
+        if (
+            stage == Stage.SELFPLAY
+            and (episode + 1 - Config.RANDOM_EPISODES) % Config.CHECKPOINT_INTERVAL == 0
+        ):
             checkpoint_idx = len(opponent_pool)
             checkpoint_path = f"{Config.MODEL_DIR}/checkpoint_{checkpoint_idx}.pth"
             player.save_model(checkpoint_path)
