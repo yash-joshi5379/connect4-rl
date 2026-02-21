@@ -44,16 +44,16 @@ class Config:
 
     OPEN_THREE: float = 0.0   
     HALF_FOUR: float = 0.0    
-    BLOCK_THREE: float = 0.04
+    BLOCK_THREE: float = 0.0
 
-    OPEN_FOUR: float = 0.05    
-    BLOCK_FOUR: float = 0.1
+    OPEN_FOUR: float = 0.0    
+    BLOCK_FOUR: float = 0.0
 
     WIN_REWARD: float = 1.0
     LOSS_REWARD: float = -1.0
     DRAW_REWARD: float = 0.0
 
-    STEP_PENALTY: float = -0.1
+    STEP_PENALTY: float = 0.0
 
     # Paths
     MODEL_DIR: str = "./models"
