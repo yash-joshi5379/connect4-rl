@@ -7,12 +7,12 @@ class Config:
 
     # Episodes
     RANDOM_EPISODES: int = 1000
-    HEURISTIC_EPISODES: int = 7000
-    SELFPLAY_EPISODES: int = 0
+    HEURISTIC_EPISODES: int = 5000
+    CHECKPOINT_INTERVAL: int = 3000  # episodes between saving a new pool checkpoint
+    SELFPLAY_EPISODES: int = CHECKPOINT_INTERVAL * 0
     TOTAL_EPISODES: int = RANDOM_EPISODES + HEURISTIC_EPISODES + SELFPLAY_EPISODES + 1
 
-    # Self-play (after random episodes)
-    CHECKPOINT_INTERVAL: int = 1000  # episodes between saving a new pool checkpoint
+    # Self-play opponents
     OPPONENT_EPSILON: float = 0.02  # forced epsilon for all frozen pool opponents
     OLD_OPPONENT_CHANCE: float = 0.20  # probability of picking an old opponent (not N-1)
 
