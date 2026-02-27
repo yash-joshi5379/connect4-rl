@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import random
+import numpy as np
 from src.buffer import ReplayBuffer
 from src.config import Config
 
@@ -50,6 +51,35 @@ class DQNAgent:
 
         self.optimizer = optim.Adam(self.q_network.parameters(), lr=self.learning_rate)
         self.buffer = ReplayBuffer()
+
+    def predict(self, board_state):
+        empty_spots = np.argwhere(board_state == 0)
+        if len(empty_spots) == 0:
+            return None
+        legal_actions = [(r,c) for r, c in empty_spots]
+
+        agent_pieces = (board_state == 1)
+        opponent_pieces = (board_state == -1) | (board_state == 2)
+
+        state = np.zeros((3, Config.BOARD_SIZE, Config.BOARD_SIZE), dtype=np.float32)
+        state[0] = agent_pieces
+        state[1] = opponent_pieces
+
+        state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+
+        with torch.no_grad():
+            q_values = self.q_network(state_tensor).cpu().numpy()[0]
+        
+        best_action = None 
+        max_q = float("-inf")
+
+        for r,c in legal_actions:
+            action_idx = r*Config.BOARD_SIZE + c
+            if q_values[action_idx] > max_q:
+                max_q = q_values[action_idx]
+                best_action = (r,c)
+        return best_action
+
 
     def select_action(self, game, epsilon=None):
         if epsilon is None:
