@@ -1,32 +1,47 @@
 # src/config.py
+
+
 class Config:
-    # Settings
+    # Board
     BOARD_SIZE: int = 9
     WIN_LENGTH: int = 5
-    RANDOM_SEED: int = 42  # for reproducibility
+    RANDOM_SEED: int = 42
 
-    # Printing/logging
+    # Network
+    NUM_FILTERS_1: int = 32
+    NUM_FILTERS_2: int = 64
+    NUM_FILTERS_3: int = 64
+    POLICY_FC_SIZE: int = 81  # BOARD_SIZE^2
+    VALUE_FC_SIZE: int = 64
+    INPUT_CHANNELS: int = 3
+
+    # MCTS
+    NUM_SIMULATIONS: int = 100
+    C_PUCT: float = 1.5
+    DIRICHLET_ALPHA: float = 0.25
+    DIRICHLET_WEIGHT: float = 0.25
+    TEMPERATURE_THRESHOLD: int = 8  # moves before switching to greedy
+
+    # Training
+    LEARNING_RATE: float = 1e-3
+    L2_REG: float = 1e-4
+    BATCH_SIZE: int = 256
+    BUFFER_CAPACITY: int = 100_000
+    POLICY_LOSS_WEIGHT: float = 1.0
+    VALUE_LOSS_WEIGHT: float = 1.0
+
+    # Curriculum
+    HEURISTIC_EPISODES: int = 3_000
+    SELFPLAY_EPISODES: int = 50_000
+    TOTAL_EPISODES: int = HEURISTIC_EPISODES + SELFPLAY_EPISODES
+    CHECKPOINT_INTERVAL: int = 1_000
+    SNAPSHOT_POOL_SIZE: int = 10
+    OLD_OPPONENT_CHANCE: float = 0.2
+
+    # Evaluation simulation budget (higher than training)
+    EVAL_SIMULATIONS: int = 200
+
+    # Logging
     PRINT_FREQUENCY: int = 100
-    OUTCOMES_MAXLEN: int = 100  # for tracking recent outcomes
-    REWARDS_MAXLEN: int = 100  # for tracking recent rewards
-
-    EPSILON_DECAY: float = 0.995
-    LEARNING_RATE: float = 1e-4
-    TARGET_UPDATE_FREQ: int = 2000
-    TRAIN_STEPS_PER_EPISODE: int = 4
-    BUFFER_CAPACITY: int = 50_000
-    GAMMA: float = 0.99
-    EPSILON_END: float = 0.01
-    EPSILON_START: float = 1.0
-    BATCH_SIZE: int = 64
-    # GRAD_CLIP_NORM: float = 1.0
-
-    # Paths
-    MODEL_DIR: str = "./models"
     LOG_DIR: str = "./logs"
-
-
-# Assertions
-assert Config.BOARD_SIZE in (9, 15), "BOARD_SIZE must be 9 or 15"
-assert Config.WIN_LENGTH == 5, "WIN_LENGTH must be 5"
-assert Config.RANDOM_SEED == 42, "RANDOM_SEED should be 42 for reproducibility"
+    MODEL_DIR: str = "./models"
