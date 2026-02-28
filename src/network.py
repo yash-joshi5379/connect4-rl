@@ -57,8 +57,8 @@ class PolicyValueNetwork(nn.Module):
         """Single state inference for MCTS. Returns policy (numpy), value (float)."""
         self.eval()
         with torch.no_grad():
-            state_tensor = torch.FloatTensor(state).unsqueeze(0)
+            state_tensor = torch.FloatTensor(state).unsqueeze(0).to(next(self.parameters()).device)
             log_policy, value = self(state_tensor)
-            policy = torch.exp(log_policy).squeeze(0).numpy()
+            policy = torch.exp(log_policy).squeeze(0).cpu().numpy()
             value = value.item()
         return policy, value
