@@ -17,7 +17,7 @@ def _transform_state_and_action(state, action, k_rot, flip, board_size):
 
     Args:
         state:      np.array of shape (C, H, W)
-        action: int in [0, board_size^2 - 1]
+        action:     int in [0, board_size^2 - 1]
         k_rot:      number of 90-degree CCW rotations (0, 1, 2, 3)
         flip:       bool, whether to flip horizontally after rotation
         board_size: int
@@ -25,11 +25,8 @@ def _transform_state_and_action(state, action, k_rot, flip, board_size):
     Returns:
         (transformed_state, transformed_action)
     """
-    # np.rot90 rotates the last two axes (H, W) counter-clockwise
     transformed_state = np.rot90(state, k=k_rot, axes=(1, 2)).copy()
 
-    # Apply the same k_rot CCW rotations to the action coordinate
-    # One step CCW: (row, col) -> (board_size - 1 - col, row)
     a = action
     for _ in range(k_rot):
         row = a // board_size
@@ -45,40 +42,42 @@ def _transform_state_and_action(state, action, k_rot, flip, board_size):
     return transformed_state, a
 
 
-def get_symmetric_transitions(state, action, reward, next_state, done):
+def _transform_policy(policy, k_rot, flip, board_size):
     """
-    Generate all 8 symmetry variants of a transition.
+    Apply a symmetry transformation to a flattened policy vector.
+    Reshapes to 2D, applies rotation/flip, flattens back.
+    """
+    policy_2d = policy.reshape(board_size, board_size)
+    policy_2d = np.rot90(policy_2d, k=k_rot)
+    if flip:
+        policy_2d = np.flip(policy_2d, axis=1)
+    return policy_2d.copy().flatten()
 
-    The square has 8 symmetries: 4 rotations (0, 90, 180, 270 CCW)
-    each with and without a horizontal flip.
+
+def get_symmetric_samples(state, policy, z):
+    """
+    Generate all 8 symmetry variants of an AlphaZero training sample.
 
     Args:
-        state:      np.array of shape (C, H, W)
-        action: int in [0, board_size^2 - 1]
-        reward:     float
-        next_state: np.array of shape (C, H, W) or None (terminal)
-        done:       bool
+        state:  np.array of shape (C, H, W)
+        policy: np.array of shape (board_size^2,) — MCTS visit distribution
+        z:      float — game outcome from this player's perspective
 
     Returns:
-        List of 8 tuples: (sym_state, sym_action, reward, sym_next_state, done)
-        reward and done are identical across all 8 variants.
+        List of 8 tuples: (sym_state, sym_policy, z)
     """
     board_size = Config.BOARD_SIZE
-    symmetric = []
+    samples = []
 
     for k_rot in range(4):
         for flip in (False, True):
-            sym_state, sym_action = _transform_state_and_action(
-                state, action, k_rot, flip, board_size
-            )
+            sym_state = np.rot90(state, k=k_rot, axes=(1, 2))
+            if flip:
+                sym_state = np.flip(sym_state, axis=2)
+            sym_state = sym_state.copy()
 
-            if next_state is not None:
-                sym_next_state, _ = _transform_state_and_action(
-                    next_state, action, k_rot, flip, board_size
-                )
-            else:
-                sym_next_state = None
+            sym_policy = _transform_policy(policy, k_rot, flip, board_size)
 
-            symmetric.append((sym_state, sym_action, reward, sym_next_state, done))
+            samples.append((sym_state, sym_policy, z))
 
-    return symmetric
+    return samples

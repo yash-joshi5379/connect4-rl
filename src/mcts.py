@@ -138,7 +138,9 @@ class MCTS:
 
         for i, action_int in enumerate(actions):
             child = node.children[action_int]
-            child.prior = (1 - Config.DIRICHLET_WEIGHT) * child.prior + Config.DIRICHLET_WEIGHT * noise[i]
+            child.prior = (
+                1 - Config.DIRICHLET_WEIGHT
+            ) * child.prior + Config.DIRICHLET_WEIGHT * noise[i]
 
     def _game_result_to_value(self, game, root_player):
         """Convert a terminal game result to a value from root player's perspective."""

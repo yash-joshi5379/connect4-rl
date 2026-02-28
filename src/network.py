@@ -11,7 +11,9 @@ class PolicyValueNetwork(nn.Module):
         board_size = Config.BOARD_SIZE
 
         # Shared trunk
-        self.conv1 = nn.Conv2d(Config.INPUT_CHANNELS, Config.NUM_FILTERS_1, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(
+            Config.INPUT_CHANNELS, Config.NUM_FILTERS_1, kernel_size=3, padding=1
+        )
         self.bn1 = nn.BatchNorm2d(Config.NUM_FILTERS_1)
 
         self.conv2 = nn.Conv2d(Config.NUM_FILTERS_1, Config.NUM_FILTERS_2, kernel_size=3, padding=1)
