@@ -257,8 +257,10 @@ def train():
     best_win_rate = 0.0
 
     for episode in trange(Config.TOTAL_EPISODES):
+        #uncomment this for ranndom opponent training 
         # opponent = random_opponent
-
+        
+        #ucomment these for heuristic agent training
         progress = episode / Config.TOTAL_EPISODES
 
         agent_is_black = random.random() < 0.5 
