@@ -80,7 +80,7 @@ class SelfPlayOpponent:
         if random.random() < 0.1:
             return random.choice(legal_actions)
         
-        state = game.get_state_for_network(persepctive_color=game.current_player)
+        state = game.get_state_for_network(perspective_color=game.current_player)
         state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
 
         with torch.no_grad():
