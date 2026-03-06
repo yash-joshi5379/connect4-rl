@@ -5,7 +5,7 @@ class Config:
     WIN_LENGTH: int = 5
 
     # Number of training episodes
-    TOTAL_EPISODES: int = 3000
+    TOTAL_EPISODES: int = 15000
 
     # How often to check the progress, and save the best rolling model
     SAVE_FREQ: int = 1000
@@ -15,7 +15,7 @@ class Config:
     GAMMA: float = 0.99
     EPSILON_START: float = 1.0
     EPSILON_END: float = 0.1
-    EPSILON_DECAY: float = 0.999
+    EPSILON_DECAY: float = 0.9995
     LEARNING_RATE: float = 5e-5
     BATCH_SIZE: int = 64
     BUFFER_CAPACITY: int = 100_000
@@ -28,13 +28,13 @@ class Config:
     # Shaped rewards in order of how big they should be (very important for training)
     THREAT_REWARD_2: float = 0.01  # 2 in a row is it starting a threat
     THREAT_REWARD_3: float = 0.03  # 3 in a row is a stronger threat
-    BLOCK_REWARD_3: float = 0.04  # prefer blocking a 3 in a row to threatening a 3 in a row
-    THREAT_REWARD_4: float = 0.05  # prefer threatening a 4 in a row to blocking a 3 in a row
-    BLOCK_REWARD_4: float = 0.10  # block 4 in a row or you lose
+    BLOCK_REWARD_3: float = 0.5 # prefer blocking a 3 in a row to threatening a 3 in a row
+    THREAT_REWARD_4: float = 0.5 # prefer threatening a 4 in a row to blocking a 3 in a row
+    BLOCK_REWARD_4: float = 1.5  # block 4 in a row or you lose
 
     # Terminal rewards
-    WIN_REWARD: float = 1.0
-    LOSS_REWARD: float = -1.0
+    WIN_REWARD: float = 2.0
+    LOSS_REWARD: float = -5.0
     DRAW_REWARD: float = 0.0
 
     # Paths
