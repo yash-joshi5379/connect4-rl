@@ -337,16 +337,14 @@ def train():
         if episode > 0 and episode % 500 == 0:
             self_play_opponent.update_model()
 
-        if progress < 0.2:
+        if progress < 0.1:
+            # 0% - 10%: Random (Learn basic movement)
             opponent = random_opponent
-        elif progress < 0.5:
-            # Mix in Heuristic to bridge the gap
-            if random.random() < 0.5:
-                opponent = random_opponent
-            else:
-                opponent = HeuristicAgent(opponent_color)
+        elif progress < 0.6:
+            # 10% - 60%: Heuristic Agent (Force it to learn defense for 9,000 episodes)
+            opponent = HeuristicAgent(opponent_color)
         else:
-            # If self-play model exists, use it. Otherwise, fallback to Heuristic.
+            # 60% - 100%: Self-Play (Now that it knows defense, learn advanced traps)
             if self_play_opponent.has_model:
                 opponent = self_play_opponent
             else:
