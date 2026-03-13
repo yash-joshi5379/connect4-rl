@@ -17,33 +17,217 @@ class RandomAgent:
         legal_actions = game.get_legal_actions()
         return random.choice(legal_actions)
 
+def _line_info(game, row, col, color, dr, dc):
+    """For a virtual stone of `color` at (row, col), return (length, open_neg, open_pos).
+    (row, col) is assumed empty; we count the line as if we placed color there."""
+    n = count_line(game, row, col, -dr, -dc, color)
+    p = count_line(game, row, col, dr, dc, color)
+    length = 1 + n + p
+    # Negative end: cell at (row - (n+1)*dr, col - (n+1)*dc)
+    rn, cn = row - (n + 1) * dr, col - (n + 1) * dc
+    open_neg = (
+        0 <= rn < Config.BOARD_SIZE
+        and 0 <= cn < Config.BOARD_SIZE
+        and game.board[rn, cn] == Color.EMPTY.value
+    )
+    rp, cp = row + (p + 1) * dr, col + (p + 1) * dc
+    open_pos = (
+        0 <= rp < Config.BOARD_SIZE
+        and 0 <= cp < Config.BOARD_SIZE
+        and game.board[rp, cp] == Color.EMPTY.value
+    )
+    return length, open_neg, open_pos
+
+
 class HeuristicAgent:
+    # Configurable weights for pattern scoring (easy to tune)
+    SCORE_WIN = 1_000_000
+    SCORE_BLOCK_WIN = 900_000
+    SCORE_OPEN_4 = 5_000
+    SCORE_SEMI_OPEN_4 = 2_000
+    SCORE_OPEN_3 = 800
+    SCORE_SEMI_OPEN_3 = 300
+    SCORE_OPEN_2 = 100
+    SCORE_SEMI_OPEN_2 = 30
+    SCORE_BLOCK_4 = 4_000
+    SCORE_BLOCK_OPEN_3 = 1_000
+    SCORE_BLOCK_SEMI_OPEN_3 = 400
+    SCORE_CENTER_PER_CELL = 15
+    SCORE_NEIGHBOR_OWN = 20
+    TOP_CANDIDATES_FOR_LOOKAHEAD = 4
+    RANDOM_TIE_BAND = 0.95  # pick randomly among moves with score >= best * this
+
     def __init__(self, color):
         self.color = color
         self.opponent_color = Color.WHITE.value if color == Color.BLACK.value else Color.BLACK.value
+
+    def _pattern_score(self, game, row, col, color):
+        """Score for patterns we create by placing our color at (row, col)."""
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        total = 0
+        open_fours = 0
+        semi_open_fours = 0
+        open_threes = 0
+        semi_open_threes = 0
+        open_twos = 0
+        semi_open_twos = 0
+        for dr, dc in directions:
+            length, open_neg, open_pos = _line_info(game, row, col, color, dr, dc)
+            if length >= 5:
+                return self.SCORE_WIN
+            both_open = open_neg and open_pos
+            one_open = open_neg or open_pos
+            if length == 4:
+                if both_open:
+                    open_fours += 1
+                elif one_open:
+                    semi_open_fours += 1
+            elif length == 3:
+                if both_open:
+                    open_threes += 1
+                elif one_open:
+                    semi_open_threes += 1
+            elif length == 2:
+                if both_open:
+                    open_twos += 1
+                elif one_open:
+                    semi_open_twos += 1
+        total += open_fours * self.SCORE_OPEN_4
+        total += semi_open_fours * self.SCORE_SEMI_OPEN_4
+        total += open_threes * self.SCORE_OPEN_3
+        total += semi_open_threes * self.SCORE_SEMI_OPEN_3
+        total += open_twos * self.SCORE_OPEN_2
+        total += semi_open_twos * self.SCORE_SEMI_OPEN_2
+        return total
+
+    def _center_bias(self, row, col):
+        """Prefer center and near-center on 9x9."""
+        center = (Config.BOARD_SIZE - 1) / 2.0
+        dist = abs(row - center) + abs(col - center)
+        max_dist = center * 2
+        return self.SCORE_CENTER_PER_CELL * (1.0 - dist / max_dist)
+
+    def _neighbor_bonus(self, game, row, col):
+        """Small bonus for playing next to our own stones."""
+        count = 0
+        for dr in (-1, 0, 1):
+            for dc in (-1, 0, 1):
+                if dr == 0 and dc == 0:
+                    continue
+                r, c = row + dr, col + dc
+                if 0 <= r < Config.BOARD_SIZE and 0 <= c < Config.BOARD_SIZE and game.board[r, c] == self.color:
+                    count += 1
+        return count * self.SCORE_NEIGHBOR_OWN
+
+    def _score_move_for_color(self, game, row, col, own_color):
+        """Score for placing stone of own_color at (row, col). Used for us and for opponent in lookahead."""
+        other = self.opponent_color if own_color == self.color else self.color
+        off = self._pattern_score(game, row, col, own_color)
+        if off >= self.SCORE_WIN:
+            return off
+        # Block score: how much we block the other color
+        directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
+        def_ = 0
+        for dr, dc in directions:
+            length, open_neg, open_pos = _line_info(game, row, col, other, dr, dc)
+            if length >= 5:
+                return self.SCORE_BLOCK_WIN
+            both_open = open_neg and open_pos
+            one_open = open_neg or open_pos
+            if length == 4:
+                def_ += self.SCORE_BLOCK_4
+            elif length == 3:
+                def_ += self.SCORE_BLOCK_OPEN_3 if both_open else (self.SCORE_BLOCK_SEMI_OPEN_3 if one_open else 0)
+        center = self._center_bias(row, col)
+        # Neighbor bonus only when evaluating our own color
+        neighbor = self._neighbor_bonus(game, row, col) if own_color == self.color else 0
+        return off + def_ + center + neighbor
+
+    def score_move(self, game, row, col):
+        """Combined static score for placing our stone at (row, col)."""
+        return self._score_move_for_color(game, row, col, self.color)
+
+    def _opponent_best_reply_score(self, game):
+        """Fast greedy score for opponent: win > block win > best static score."""
+        legal = game.get_legal_actions()
+        if not legal:
+            return 0.0
+        best = -1e9
+        for r, c in legal:
+            our_len = get_pattern_length(game, r, c, self.color)
+            opp_len = get_pattern_length(game, r, c, self.opponent_color)
+            if our_len >= 5:
+                return 1e9
+            if opp_len >= 5:
+                return -1e9
+            s = self.score_move(game, r, c)
+            best = max(best, s)
+        return best
+
+    def _lookahead_score(self, game, candidate):
+        """After we play candidate, opponent replies with their best move; return our score in that position."""
+        cloned = game.clone()
+        cloned.step(candidate)
+        if cloned.result != GameResult.ONGOING:
+            return 1e9 if cloned.result == (GameResult.BLACK_WIN if self.color == Color.BLACK.value else GameResult.WHITE_WIN) else -1e9
+        opp_legal = cloned.get_legal_actions()
+        if not opp_legal:
+            return 0.0
+        best_opp_score = -1e9
+        best_opp_move = None
+        for r, c in opp_legal:
+            if get_pattern_length(cloned, r, c, self.opponent_color) >= 4:
+                return -1e9
+            s = self._score_move_for_color(cloned, r, c, self.opponent_color)
+            if s > best_opp_score:
+                best_opp_score = s
+                best_opp_move = (r, c)
+        if best_opp_move is None:
+            return 0.0
+        cloned.step(best_opp_move)
+        if cloned.result != GameResult.ONGOING:
+            return -1e9
+        our_legal = cloned.get_legal_actions()
+        if not our_legal:
+            return 0.0
+        return max(self.score_move(cloned, r, c) for r, c in our_legal)
 
     def select_action(self, game):
         legal_actions = game.get_legal_actions()
         if not legal_actions:
             return None
-        
-        #immediate win
+
+        # Immediate win
         for r, c in legal_actions:
             if get_pattern_length(game, r, c, self.color) >= 4:
-                return(r,c)
-        
-        #immediate block?
+                return (r, c)
+
+        # Immediate block of opponent win
         for r, c in legal_actions:
             if get_pattern_length(game, r, c, self.opponent_color) >= 4:
-                return(r, c)
-        
-        #block 3 in a row
-        for r, c in legal_actions:
-            if get_pattern_length(game, r, c, self.opponent_color) == 3:
-                if random.random() < 0.8:
-                    return(r,c)   #i added random to make it slightly unpredictable
-        
-        return random.choice(legal_actions)
+                return (r, c)
+
+        # Score all moves
+        scored = [(self.score_move(game, r, c), (r, c)) for r, c in legal_actions]
+        scored.sort(key=lambda x: -x[0])
+        best_score = scored[0][0]
+
+        # Optional 1-ply lookahead on top candidates
+        k = min(self.TOP_CANDIDATES_FOR_LOOKAHEAD, len(scored))
+        top = scored[:k]
+        if k > 1 and best_score < self.SCORE_WIN and best_score < self.SCORE_BLOCK_WIN:
+            lookahead_scores = []
+            for _, move in top:
+                ls = self._lookahead_score(game, move)
+                lookahead_scores.append((ls, move))
+            lookahead_scores.sort(key=lambda x: -x[0])
+            best_la = lookahead_scores[0][0]
+            ties = [(s, m) for s, m in lookahead_scores if s >= best_la * self.RANDOM_TIE_BAND]
+            return random.choice(ties)[1]
+
+        # Pick among top moves with small randomness
+        ties = [m for s, m in scored if s >= best_score * self.RANDOM_TIE_BAND]
+        return random.choice(ties)
 
 class SelfPlayOpponent: 
     def __init__(self, model_dir, device): 
