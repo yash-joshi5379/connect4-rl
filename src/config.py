@@ -7,7 +7,7 @@ class Config:
 
     # Episodes
     RANDOM_EPISODES: int = 1000
-    HEURISTIC_EPISODES: int = 5000
+    HEURISTIC_EPISODES: int = 8000
     CHECKPOINT_INTERVAL: int = 3000  # episodes between saving a new pool checkpoint
     SELFPLAY_EPISODES: int = CHECKPOINT_INTERVAL * 0
     TOTAL_EPISODES: int = RANDOM_EPISODES + HEURISTIC_EPISODES + SELFPLAY_EPISODES + 1
@@ -49,7 +49,7 @@ class Config:
     OPEN_FOUR: float = 0.3
 
     # Defensive - blocking opponent lines
-    BLOCK_THREE: float = 0.05
+    BLOCK_THREE: float = 0.3
     BLOCK_FOUR: float = 0.4  # higher than OPEN_FOUR — failing to block a 4 loses the game
 
     WIN_REWARD: float = 1.0
