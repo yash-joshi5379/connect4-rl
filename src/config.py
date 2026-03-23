@@ -8,7 +8,7 @@ class Config:
     # Episodes
     RANDOM_EPISODES: int = 1000
     HEURISTIC_EPISODES: int = 1000
-    CHECKPOINT_INTERVAL: int = 500  # episodes between saving a new pool checkpoint
+    CHECKPOINT_INTERVAL: int = 1000  # episodes between saving a new pool checkpoint
     SELFPLAY_EPISODES: int = CHECKPOINT_INTERVAL * 8
     TOTAL_EPISODES: int = RANDOM_EPISODES + HEURISTIC_EPISODES + SELFPLAY_EPISODES + 1
 
