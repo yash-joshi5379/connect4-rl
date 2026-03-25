@@ -13,7 +13,7 @@ import pygame
 
 # ========== SET THESE ==========
 MODEL_PATH = "output/model_final.pt"
-NUM_SIMULATIONS = 400
+NUM_SIMULATIONS = 800   # Max 800 simulations
 # ===============================
 
 BOARD_SIZE = 9
