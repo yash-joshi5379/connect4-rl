@@ -13,3 +13,4 @@ dependencies:
   - pygame
   - tqdm
   - tensorboard
+  - matplotlib

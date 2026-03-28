@@ -10,9 +10,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.amp import autocast
 import pygame
+from pathlib import Path
 
 # ========== SET THESE ==========
-MODEL_PATH = "output/model_final.pt"
+# MODEL_DIR = r"SUCCESS_400_20_150"
+# MODEL_DIR = r"SUCCESS_400_30_180"
+MODEL_DIR = r"SUCCESS_800_40_200"
+PATH = Path(MODEL_DIR) / "model_final.pt"
 NUM_SIMULATIONS = 800   # Max 800 simulations
 # ===============================
 
@@ -357,9 +361,9 @@ class Renderer:
 MOVE_DELAY_MS = 0   # Pause between moves (ms). Set to 0 for no delay.
 
 def main():
-    print(f"Loading model: {MODEL_PATH}")
+    print(f"Loading model: {PATH}")
     net = AlphaZeroNet().to(DEVICE)
-    net.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE, weights_only=True))
+    net.load_state_dict(torch.load(PATH, map_location=DEVICE, weights_only=True))
     net.eval()
     print(f"Device: {DEVICE}")
     print(f"MCTS sims: {NUM_SIMULATIONS}")
